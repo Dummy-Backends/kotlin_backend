@@ -10,9 +10,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.example.chacego.ui.auth.AuthScreen
-import com.example.chacego.ui.auth.AuthViewModel
-import com.example.chacego.ui.auth.RC_SIGN_IN_GOOGLE
+import com.example.chacego.ui.theme.Auth.AuthScreen
+import com.example.chacego.ui.theme.Auth.AuthViewModel
+import com.example.chacego.ui.theme.Auth.RC_SIGN_IN_GOOGLE
 import com.example.chacego.ui.theme.ChaceGoTheme
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient

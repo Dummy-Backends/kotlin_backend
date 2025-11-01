@@ -2,6 +2,7 @@
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const connectDB = require('./src/config/db');
 require('dotenv').config({ path: './.env' }); // Load secrets
 
@@ -17,6 +18,9 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors()); // Allows cross-origin requests (necessary for mobile app)
 app.use(express.json()); // Allows parsing of JSON request bodies
+
+// Serve uploaded images statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads/profile_pictures')));
 
 // Route Mounting
 app.use('/api/profile', profileRoutes);

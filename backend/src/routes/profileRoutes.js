@@ -2,9 +2,49 @@
 
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const protect = require('../middleware/authMiddleware');
 const Profile = require('../models/Profile');
 const admin = require('../config/firebaseAdmin'); // Used for first-time profile check
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../../uploads/profile_pictures');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+        // Use userId from the authenticated user + timestamp + extension
+        const userId = req.user?.id || 'unknown';
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, `${userId}-${uniqueSuffix}${ext}`);
+    }
+});
+
+const fileFilter = (req, file, cb) => {
+    // Accept only image files
+    if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only image files are allowed!'), false);
+    }
+};
+
+const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+});
 
 // --- Utility function to calculate Win Rate ---
 const calculateWinRate = (wins, losses) => {
@@ -56,6 +96,32 @@ router.put('/customize', protect, async (req, res) => {
             return res.status(400).json({ message: 'Nickname is already taken.' });
         }
         res.status(500).json({ message: 'Server error during customization update.' });
+    }
+});
+
+// @route   POST /api/profile/upload-image
+// @desc    Upload profile picture image file
+// @access  Private (Requires JWT)
+router.post('/upload-image', protect, upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No image file provided.' });
+        }
+
+        // Construct the URL for the uploaded image
+        // This assumes your server is accessible at a base URL
+        const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+        // The static route /uploads serves from uploads/profile_pictures, so URL is /uploads/filename
+        const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+
+        res.json({
+            success: true,
+            imageUrl: imageUrl,
+            filename: req.file.filename
+        });
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        res.status(500).json({ message: 'Server error uploading image.' });
     }
 });
 
