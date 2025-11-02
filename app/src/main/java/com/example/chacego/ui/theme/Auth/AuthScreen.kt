@@ -35,6 +35,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,9 +60,24 @@ fun AuthScreen(
 
     viewModel: AuthViewModel = viewModel(),
 
-    onGoogleSignInClicked: () -> Unit
+    onGoogleSignInClicked: () -> Unit,
+    
+    onNavigateToLobby: () -> Unit = {}
 
 ) {
+
+    // Navigate to lobby when profile is complete (not NewPlayer and not editing)
+    // Only navigate once when conditions are met
+    LaunchedEffect(viewModel.profile?.nickname, viewModel.isEditingProfile) {
+        val profile = viewModel.profile
+        if (viewModel.isAuthenticated && 
+            profile != null && 
+            profile.nickname != "NewPlayer" && 
+            !viewModel.isEditingProfile) {
+            // Profile is complete, navigate to lobby
+            onNavigateToLobby()
+        }
+    }
 
     if (viewModel.isAuthenticated) {
 
@@ -81,9 +97,10 @@ fun AuthScreen(
 
 
 
-// 3. Profile is complete, show completion screen
+// 3. Profile is complete - will navigate via LaunchedEffect
+// Keep showing loading or a brief message while navigating
 
-            else -> ProfileCompleteScreen(viewModel)
+            else -> LoadingScreen(message = "Redirection vers le lobby...")
 
         }
 
@@ -101,7 +118,7 @@ fun AuthScreen(
 
 @Composable
 
-fun LoadingScreen() {
+fun LoadingScreen(message: String = "Chargement du profil...") {
 
     Column(
 
@@ -117,7 +134,7 @@ fun LoadingScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Chargement du profil...")
+        Text(message)
 
     }
 

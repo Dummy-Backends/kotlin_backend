@@ -10,7 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.example.chacego.ui.theme.Auth.AuthScreen
+import com.example.chacego.navigation.AppNavigation
 import com.example.chacego.ui.theme.Auth.AuthViewModel
 import com.example.chacego.ui.theme.Auth.RC_SIGN_IN_GOOGLE
 import com.example.chacego.ui.theme.ChaceGoTheme
@@ -43,10 +43,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // C'EST LA LIGNE CLÉ : On affiche directement l'écran AuthScreen.
-                    // AuthScreen gère lui-même si l'utilisateur est connecté ou doit voir le formulaire.
-                    AuthScreen(
-                        viewModel = authViewModel,
+                    // Use Navigation Compose to manage navigation between Auth and Lobby screens
+                    AppNavigation(
+                        authViewModel = authViewModel,
                         onGoogleSignInClicked = ::signInWithGoogle
                     )
                 }
