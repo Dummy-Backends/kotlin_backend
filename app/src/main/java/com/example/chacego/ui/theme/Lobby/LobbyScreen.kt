@@ -5,11 +5,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -22,7 +26,8 @@ import coil.compose.AsyncImage
 @Composable
 fun LobbyScreen(
     viewModel: LobbyViewModel = viewModel(),
-    onNavigateToAuth: () -> Unit = {}
+    onNavigateToAuth: () -> Unit = {},
+    onNavigateToHistory: () -> Unit = {}
 ) {
     // Load profile when screen is first displayed
     LaunchedEffect(Unit) {
@@ -31,21 +36,79 @@ fun LobbyScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Lobby") },
-                actions = {
-                    IconButton(onClick = { viewModel.refreshProfile() }) {
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    text = "Menu",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+                Divider()
+                
+                NavigationDrawerItem(
+                    icon = {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh Profile"
+                            imageVector = Icons.Default.History,
+                            contentDescription = "Historique"
                         )
-                    }
-                }
-            )
+                    },
+                    label = { Text("Historique") },
+                    selected = false,
+                    onClick = {
+                        onNavigateToHistory()
+                        scope.launch {
+                            drawerState.close()
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+                
+                Spacer(Modifier.weight(1f))
+                
+                Divider()
+                Text(
+                    text = "Lobby",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
         }
-    ) { paddingValues ->
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Lobby") },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            scope.launch {
+                                drawerState.open()
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "Menu"
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { viewModel.refreshProfile() }) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Refresh Profile"
+                            )
+                        }
+                    }
+                )
+            }
+        ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -114,6 +177,7 @@ fun LobbyScreen(
                     }
                 }
             }
+        }
         }
     }
 }
