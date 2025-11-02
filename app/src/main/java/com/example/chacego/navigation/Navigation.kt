@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.chacego.ui.theme.Auth.AuthScreen
 import com.example.chacego.ui.theme.Auth.AuthViewModel
+import com.example.chacego.ui.theme.History.HistoryScreen
 import com.example.chacego.ui.theme.Lobby.LobbyScreen
 
 /**
@@ -15,6 +16,7 @@ import com.example.chacego.ui.theme.Lobby.LobbyScreen
 sealed class Screen(val route: String) {
     object Auth : Screen("auth")
     object Lobby : Screen("lobby")
+    object History : Screen("history")
 }
 
 /**
@@ -50,6 +52,17 @@ fun AppNavigation(
                         // Clear the lobby from back stack
                         popUpTo(Screen.Lobby.route) { inclusive = true }
                     }
+                },
+                onNavigateToHistory = {
+                    navController.navigate(Screen.History.route)
+                }
+            )
+        }
+
+        composable(Screen.History.route) {
+            HistoryScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }
