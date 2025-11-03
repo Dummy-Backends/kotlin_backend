@@ -2,6 +2,7 @@ package com.example.chacego.data
 
 /**
  * Data class for email verification codes stored in Firestore
+ * hahahahahahahaahhahahhahaahahahaahahahahahaahahahahahah
  */
 data class EmailVerification(
     val email: String,

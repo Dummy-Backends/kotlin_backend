@@ -61,7 +61,7 @@ fun AuthScreen(
     viewModel: AuthViewModel = viewModel(),
 
     onGoogleSignInClicked: () -> Unit,
-    
+
     onNavigateToLobby: () -> Unit = {}
 
 ) {
@@ -70,9 +70,9 @@ fun AuthScreen(
     // Only navigate once when conditions are met
     LaunchedEffect(viewModel.profile?.nickname, viewModel.isEditingProfile) {
         val profile = viewModel.profile
-        if (viewModel.isAuthenticated && 
-            profile != null && 
-            profile.nickname != "NewPlayer" && 
+        if (viewModel.isAuthenticated &&
+            profile != null &&
+            profile.nickname != "NewPlayer" &&
             !viewModel.isEditingProfile) {
             // Profile is complete, navigate to lobby
             onNavigateToLobby()
@@ -439,12 +439,14 @@ fun CustomizationScreen(viewModel: AuthViewModel) {
     val context = LocalContext.current
 
     // Initialize inputs with current profile values when editing, or empty for new profile
-    var nicknameInput by remember { 
-        mutableStateOf(viewModel.profile?.nickname?.takeIf { it != "NewPlayer" } ?: "") 
+    var nicknameInput by remember {
+        mutableStateOf(viewModel.profile?.nickname?.takeIf { it != "NewPlayer" } ?: "")
     }
-    
+
+    // Original line: var pictureUrlInput by remember { mutableStateOf(viewModel.profile?.profilePictureUrl ?: "") }
+    // The pictureUrlInput in the composable is no longer strictly needed but kept to not change code structure unnecessarily.
     var pictureUrlInput by remember { mutableStateOf(viewModel.profile?.profilePictureUrl ?: "") }
-    
+
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
 
@@ -500,10 +502,11 @@ fun CustomizationScreen(viewModel: AuthViewModel) {
             modifier = Modifier.fillMaxWidth()
         ) {
             // Profile picture preview - prioritize selected image, then uploaded URL, then existing profile
-            val imageModel = selectedImageUri 
+            // FIX: Removed '&& !it.contains("placehold")' to ensure custom images load even if the server returns a temporary URL that matches the filter.
+            val imageModel = selectedImageUri
                 ?: viewModel.pictureUrlInput.takeIf { it.isNotBlank() }?.let { Uri.parse(it) }
-                ?: viewModel.profile?.profilePictureUrl?.takeIf { it.isNotBlank() && !it.contains("placehold") }
-            
+                ?: viewModel.profile?.profilePictureUrl?.takeIf { it.isNotBlank() }
+
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -529,9 +532,9 @@ fun CustomizationScreen(viewModel: AuthViewModel) {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Button(
                 onClick = {
                     imagePickerLauncher.launch("image/*")
@@ -556,9 +559,9 @@ fun CustomizationScreen(viewModel: AuthViewModel) {
                     Text("Sélectionner une photo")
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 text = "Sélectionnez une photo de profil depuis votre galerie",
                 style = MaterialTheme.typography.bodySmall,
@@ -622,12 +625,12 @@ fun CustomizationScreen(viewModel: AuthViewModel) {
 
                 } else {
 
-                    // Use the uploaded URL if available, otherwise use the input field or existing profile picture
-                    val finalPictureUrl = viewModel.pictureUrlInput.takeIf { it.isNotBlank() } 
-                        ?: pictureUrlInput.takeIf { it.isNotBlank() }
+                    // FIX: Simplified logic to prioritize the new uploaded URL (viewModel.pictureUrlInput)
+                    // over the old local input state (pictureUrlInput) and ensure a non-null default.
+                    val finalPictureUrl = viewModel.pictureUrlInput.takeIf { it.isNotBlank() }
                         ?: viewModel.profile?.profilePictureUrl?.takeIf { it.isNotBlank() }
                         ?: ""
-                    
+
                     viewModel.createOrUpdateProfile(context as Activity, nicknameInput, finalPictureUrl)
                 }
 
