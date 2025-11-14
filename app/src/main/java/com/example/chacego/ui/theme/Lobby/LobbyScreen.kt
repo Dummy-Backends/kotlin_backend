@@ -1,11 +1,14 @@
 package com.example.chacego.ui.theme.Lobby
 
+import android.annotation.SuppressLint
+import android.app.Activity // <-- ADDED IMPORT
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -17,11 +20,13 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext // <-- ADDED IMPORT
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 
+@SuppressLint("ContextCastToActivity")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LobbyScreen(
@@ -38,7 +43,8 @@ fun LobbyScreen(
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    
+    val context = LocalContext.current as Activity // <-- GET CONTEXT
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -51,7 +57,7 @@ fun LobbyScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
                 Divider()
-                
+
                 NavigationDrawerItem(
                     icon = {
                         Icon(
@@ -69,9 +75,36 @@ fun LobbyScreen(
                     },
                     modifier = Modifier.padding(horizontal = 12.dp)
                 )
-                
-                Spacer(Modifier.weight(1f))
-                
+
+                Spacer(Modifier.weight(1f)) // This spacer pushes the item below to the bottom
+
+                // --- UPDATED LOGOUT BUTTON ---
+                NavigationDrawerItem(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Logout,
+                            contentDescription = "Déconnexion",
+                            tint = MaterialTheme.colorScheme.error // Optional: makes the icon red
+                        )
+                    },
+                    label = {
+                        Text(
+                            "Déconnexion",
+                            color = MaterialTheme.colorScheme.error // Optional: makes the text red
+                        )
+                    },
+                    selected = false,
+                    onClick = {
+                        scope.launch {
+                            drawerState.close()
+                        }
+                        viewModel.signOut(context) // <-- PASS CONTEXT TO SIGN OUT
+                        onNavigateToAuth() // Navigate back to Auth screen
+                    },
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+                // --- END OF UPDATED LOGOUT BUTTON ---
+
                 Divider()
                 Text(
                     text = "Lobby",
@@ -109,75 +142,75 @@ fun LobbyScreen(
                 )
             }
         ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            when {
-                viewModel.isLoading && viewModel.profile == null -> {
-                    // Loading state
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-
-                viewModel.profile != null -> {
-                    // Profile loaded - show lobby content
-                    ProfileSection(viewModel.profile!!)
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // Error message display
-                    if (viewModel.errorMessage != null) {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer
-                            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                when {
+                    viewModel.isLoading && viewModel.profile == null -> {
+                        // Loading state
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = viewModel.errorMessage!!,
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                modifier = Modifier.padding(16.dp)
-                            )
+                            CircularProgressIndicator()
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    viewModel.profile != null -> {
+                        // Profile loaded - show lobby content
+                        ProfileSection(viewModel.profile!!)
 
-                    // Placeholder for future features
-                    PlaceholderFeaturesSection()
-                }
+                        Spacer(modifier = Modifier.height(32.dp))
 
-                else -> {
-                    // Error state
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
+                        // Error message display
                         if (viewModel.errorMessage != null) {
-                            Text(
-                                text = viewModel.errorMessage!!,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer
+                                )
+                            ) {
+                                Text(
+                                    text = viewModel.errorMessage!!,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
                         }
-                        Button(onClick = { viewModel.loadProfile() }) {
-                            Text("Retry")
+
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        // Placeholder for future features
+                        PlaceholderFeaturesSection()
+                    }
+
+                    else -> {
+                        // Error state
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            if (viewModel.errorMessage != null) {
+                                Text(
+                                    text = viewModel.errorMessage!!,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                            Button(onClick = { viewModel.loadProfile() }) {
+                                Text("Retry")
+                            }
                         }
                     }
                 }
             }
-        }
         }
     }
 }
@@ -194,7 +227,7 @@ fun ProfileSection(profile: com.example.chacego.data.PlayerProfile) {
         ) {
             // Profile Picture
             AsyncImage(
-                model = profile.profilePictureUrl.takeIf { it.isNotBlank() && !it.contains("placehold") }
+                model = profile.profilePictureUrl.takeIf { it.isNotBlank() }
                     ?: null,
                 contentDescription = "Profile Picture",
                 modifier = Modifier
@@ -277,4 +310,3 @@ fun PlaceholderFeaturesSection() {
         }
     }
 }
-
